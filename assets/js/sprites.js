@@ -253,7 +253,7 @@ const Sprites = (() => {
   /* Palettes per character (+ signature board colours from the artwork) */
   const CHARACTERS = {
     wave: {
-      id: 'wave', name: 'Wave', head: 12, upper: WAVE_UPPER,
+      id: 'wave', name: 'Leo', head: 12, upper: WAVE_UPPER,
       palette: {
         b: '#1d1d26', B: '#3a3a4a', h: '#eef0f5', H: '#c4c8d4', s: '#f6d2b6', S: '#e0a887',
         g: '#15151c', l: '#cfe3f2', e: '#1f1a2b', m: '#b8405e', w: '#ffffff',
@@ -264,7 +264,7 @@ const Sprites = (() => {
       desc: 'Beanie & blue lightning board',
     },
     khaki: {
-      id: 'khaki', name: 'Khaki', head: 12, upper: KHAKI_UPPER,
+      id: 'khaki', name: 'Johanne', head: 12, upper: KHAKI_UPPER,
       palette: {
         h: '#6b3f24', H: '#9a6238', s: '#f4cfb2', S: '#dca283', d: '#4a2a18', e: '#2a1a14',
         w: '#ffffff', r: '#f0a0a8', m: '#c44d62',
@@ -275,7 +275,7 @@ const Sprites = (() => {
       desc: 'Khaki jacket & neon board',
     },
     sky: {
-      id: 'sky', name: 'Sky', head: 12, upper: SKY_UPPER,
+      id: 'sky', name: 'Carmen', head: 12, upper: SKY_UPPER,
       palette: {
         h: '#eeb449', H: '#fbe08a', s: '#f8d5bc', S: '#e2a98b', g: '#7a4b32', w: '#ffffff',
         e: '#1f1a2b', r: '#f29ab0', m: '#d4506e', c: '#f5f7fb', C: '#7b9cc9', b: '#3d4461',
