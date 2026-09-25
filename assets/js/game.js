@@ -599,7 +599,7 @@ const Game = (() => {
 
     const pose = player.ducking && player.jumpT < 0 ? 'duck' : (player.jumpT >= 0 ? 'jump' : 'run');
     const spr = Sprites.surferSprite(characterId, pose);
-    const scale = 4.2;
+    const scale = 3.2;
     const w = spr.width * scale, h = spr.height * scale;
 
     // lane-change tilt (surfboard movement)
@@ -614,11 +614,11 @@ const Game = (() => {
 
     // lippo first (slightly behind)
     if (loadout && loadout.lippo) {
-      const lx = xAt(lippo.x, 0.92);
+      const lx = xAt(lippo.x, 0.92) - 64; // rides just beside the surfer
       const ly = yAt(0.92) + Math.sin(lippo.bob * 3.4) * 4;
       const lspr = Sprites.lippoSprite();
-      const lw = lspr.width * 3.2, lh = lspr.height * 3.2;
-      Sprites.drawBoard(ctx, lx, ly + 8, 58, 12, loadout.lippoBoard === 'lippo_board_paddle' ? 'classic' : 'rainbow', 0);
+      const lw = lspr.width * 3, lh = lspr.height * 3;
+      Sprites.drawBoard(ctx, lx, ly + 10, 58, 12, loadout.lippoBoard === 'paddle' ? 'classic' : 'rainbow', 0);
       ctx.drawImage(lspr, lx - lw / 2, ly - lh + 10, lw, lh);
       if (loadout.lippoSparkles) {
         ctx.fillStyle = '#ffffff';
@@ -629,7 +629,8 @@ const Game = (() => {
         }
       }
       if (loadout.lippoHat) {
-        Sprites.drawHat(ctx, loadout.lippoHat === 'lippo_hat_crown' ? 'crown' : 'party', lx, ly - lh + 8, 3);
+        // hat sits on Lippo's head (right side of the sprite)
+        Sprites.drawHat(ctx, loadout.lippoHat, lx + lw * 0.2, ly - lh + 12, 3);
       }
     }
 
@@ -637,16 +638,15 @@ const Game = (() => {
     ctx.translate(px, py);
     ctx.rotate(tilt + (trickT > 0 ? (1 - trickT / 0.55) * Math.PI * 2 : 0));
 
-    // surfboard under the character
-    Sprites.drawBoard(ctx, 0, h * 0.62, 120, 24, loadout ? (loadout.board === 'board_galaxy' ? 'galaxy' : loadout.board === 'board_rainbow' ? 'rainbow' : 'classic') : 'classic', 0);
+    // surfboard right under the feet (classic = the character's signature board)
+    Sprites.drawBoard(ctx, 0, 6, 120, 24, loadout ? loadout.board : 'classic', 0, characterId);
 
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(spr, -w / 2, -h, w, h);
 
     // hat on top
     if (loadout && loadout.hat) {
-      const hatId = loadout.hat === 'hat_crown' ? 'crown' : loadout.hat === 'hat_propeller' ? 'propeller' : 'party';
-      Sprites.drawHat(ctx, hatId, 0, -h + 4, scale);
+      Sprites.drawHat(ctx, loadout.hat, 0, -h + 3 * scale, scale * 1.2);
     }
     ctx.restore();
 

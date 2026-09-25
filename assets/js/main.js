@@ -27,7 +27,7 @@ const MainUI = (() => {
 
     const players = Storage.listPlayers();
     if (players.length === 0) showScreen('screen-login');
-    else showScreen('screen-start');
+    else { refreshStartScreen(); showScreen('screen-start'); }
   }
 
   function handleGithubRedirect() {
@@ -134,7 +134,7 @@ const MainUI = (() => {
       card.className = 'char-card' + (selectedCharacter === id ? ' active' : '');
       const cnv = document.createElement('canvas');
       const spr = Sprites.surferSprite(id, 'run');
-      const scale = 5;
+      const scale = 4;
       cnv.width = spr.width * scale + 12; cnv.height = spr.height * scale + 12;
       const c = cnv.getContext('2d');
       c.imageSmoothingEnabled = false;

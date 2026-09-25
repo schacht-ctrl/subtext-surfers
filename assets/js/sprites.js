@@ -104,158 +104,230 @@ const Sprites = (() => {
   }
 
   /* ------------------------- sprite maps ------------------------- */
-  /* '.' transparent, letters map to a palette key. */
+  /* '.' transparent, letters map to a palette key. Maps are drawn without
+   * outlines – buildSprite() adds the dark cartoon outline automatically,
+   * matching the thick line-art of the team artwork.
+   *
+   * Every character = UPPER (head + torso, 17 rows) + a shared LOWER part
+   * per pose. `head` = number of head rows (kept when ducking). */
 
-  const SURFER_MAP = [
-    '....hhhhhh....',
-    '...hhhhhhhh...',
-    '...hssssssh...',
-    '...hseessesh..',
-    '...hssssssh...',
-    '....sssmms....',
-    '....sssss.....',
-    '...bbbbbbbb...',
-    '..bbbbbbbbbb..',
-    '..bfbbbbbbfb..',
-    '..bfbbbbbbfb..',
-    '...bbbbbbbb...',
-    '...pppppppp...',
-    '...pp....pp...',
-    '...ss....ss...',
-    '...ss....ss...',
+  const LOWER = {
+    run: [
+      '....pppppppppp....',
+      '....ppppqqpppp....',
+      '...ppppp..ppppp...',
+      '...pPpp....ppPp...',
+      '..pppp......pppp..',
+      '..pPpp......ppPp..',
+      '..kkkk......kkkk..',
+      '.kkKkk......kkKkk.',
+      '.wwwww......wwwww.',
+    ],
+    jump: [
+      '....pppppppppp....',
+      '...pppppppppppp...',
+      '..ppPpp....ppPpp..',
+      '..kkKkk....kkKkk..',
+      '..wwwww....wwwww..',
+      '..................',
+      '..................',
+      '..................',
+      '..................',
+    ],
+    duck: [
+      '..pppppppppppppp..',
+      '.ppPpppp..ppppPpp.',
+      '.kkKkkk....kkKkkk.',
+      '.wwwwww....wwwwww.',
+    ],
+  };
+
+  /* Blonde surfer: long golden waves, round glasses, striped shirt,
+   * colourful backpack, light jeans, blue/pink sneakers, red board. */
+  const SKY_UPPER = [
+    '.....hhhhhhhh.....',
+    '...hhhhHHHhhhhh...',
+    '..hhhHHHhhhhhhhh..',
+    '..hhHhhhhhhhhhhh..',
+    '.hhhhhhsssssssshh.',
+    '.hhhsggssssggshhh.',
+    '.hhhgweggggewghhh.',
+    '.hhhsggssssggshhh.',
+    '.hhhsrssssssrshhh.',
+    '.hhhsssmmmmssshhh.',
+    'hhHhhsssssssshhHhh',
+    'hhhhhhhSSSShhhhhhh',
+    'hhhhcCcCsscCcChhhh',
+    'hhhbCcCcCcCcCcbhhh',
+    'ssccbcCcCcCcCbccss',
+    'ss..bCcCcCcCcb..ss',
+    '.yz.cCcCcCcCcC....',
   ];
 
-  const SURFER_JUMP_MAP = [
-    '....hhhhhh....',
-    '...hhhhhhhh...',
-    '...hssssssh...',
-    '...hseessesh..',
-    '...hssssssh...',
-    '....sssmms....',
-    '....sssss.....',
-    '...bbbbbbbb...',
-    '..bbbbbbbbbb..',
-    '..bfbbbbbbfb..',
-    '..bfbbbbbbfb..',
-    '...bbbbbbbb...',
-    '...pppppppp...',
-    '...pp.pp.pp...',
-    '....ss..ss....',
-    '..............',
+  /* Beanie guy: black 'THE OCEAN' beanie, platinum hair, chunky black
+   * glasses, big grin, black hoodie with white logo, joggers, blue board. */
+  const WAVE_UPPER = [
+    '.....bbbbbbbb.....',
+    '...bbbBBbbbbbbb...',
+    '..bbbbbbbbbbbbbb..',
+    '..bwwbwbwwbwwbwb..',
+    '..bbbbbbbbbbbbbb..',
+    '.hhhssssssssssHhh.',
+    '.hhggggssssggggHh.',
+    '.hhgelggggggelghh.',
+    '.hhggggssssgggghh.',
+    '..hsssssSSssssshh.',
+    '...ssmwwwwwwmss...',
+    '....sssmmmmsss....',
+    '...cccCcwwcCccc...',
+    '..cccccccccccccc..',
+    'ssccccccwcwcccccss',
+    'ss..cccwwwcccc..ss',
+    '....CCCCCCCCCC....',
   ];
 
-  const SURFER_DUCK_MAP = [
-    '................',
-    '....hhhhhhhh....',
-    '...hhhhhhhhhh...',
-    '...hssssssssh...',
-    '...hseessessh...',
-    '...hssssssssh...',
-    '....sssmmss.....',
-    '.bbbbssssssbbbbb',
-    'bbbfbbbbbbbbfbbb',
-    'bbbfbbbbbbbbfbbb',
-    '.bbppppppppppbb.',
-    '..pppppppppppp..',
-    '................',
+  /* Brunette surfer: long brown waves, khaki jacket over a black top,
+   * golden necklace, dark trousers & boots, green neon board. */
+  const KHAKI_UPPER = [
+    '.....hhhhhhhh.....',
+    '...hhhHHhhhhhhh...',
+    '..hhHHhhhhhhhhhh..',
+    '..hhhhhhhhhhhhhh..',
+    '.hhhhsssssshhhhhh.',
+    '.hhhsddssssddshhh.',
+    '.hhhseesssseeshhh.',
+    '.hhhsssssssssshhh.',
+    '.hhhsrssSSssrshhh.',
+    '.hhhsssmmmmssshhh.',
+    'hhHhhsssssssshhHhh',
+    'hhhhhhhSSSShhhhhhh',
+    'hhhhjjJttttJjjhhhh',
+    'hhhjjjJtnntJjjjhhh',
+    'ssjjjjJttttJjjjjss',
+    'ss..jjJttttJjj..ss',
+    '....jjJttttJjj....',
   ];
 
-  const HELGE_MAP = [
-    '.....kkkkkk.....',
-    '...kkkkkkkkkk...',
-    '..kkkkkkkkkkkk..',
-    '..kksssssssskk..',
-    '..kssseesseessk.',
-    '..kssssssssssk..',
-    '...ssssmmssss...',
-    '...ssssssssss...',
-    '....ssssssss....',
-    '...uuuuuuuuuu...',
-    '..uuuuuuuuuuuu..',
-    '..uwuuuuuuuuwu..',
-    '..uwuuuuuuuuwu..',
-    '...uuuuuuuuuu...',
-    '...dddddddddd...',
-    '...dddd..dddd...',
-    '...kkk....kkk...',
-    '...kkk....kkk...',
+  /* Helge: huge dark pompadour, round white-rimmed shades, toothy grin,
+   * long chin, white turtleneck (purple trousers as a nod to his backdrop). */
+  const HELGE_UPPER = [
+    '....hhhhhhhhhh....',
+    '..hhhhhHHhhhhhhh..',
+    '.hhhhHHhhhhhhhhhh.',
+    '.hhhhhhhhhhhhhhhh.',
+    '.hhhhhhsssssssshh.',
+    '.hhhgggssssggghhh.',
+    '.hhgeweeggeweeghh.',
+    '.hhgeeeeggeeeeghh.',
+    '.hhhgggsnnsggghhh.',
+    '.hhhssssnnsssshhh.',
+    '.hhsswwwwwwwwsshh.',
+    '....sSmmmmmmSs....',
+    '....sSssssssSs....',
+    '....tttttttttt....',
+    'sstttTttttttTtttss',
+    'ss..tTttttttTt..ss',
+    '....TttttttttT....',
   ];
 
-  const HELGE_JUMP_MAP = HELGE_MAP.slice(0, 14).concat([
-    '...dddddddddd...',
-    '...dd.dd.dd.dd..',
-    '...kk....kk.....',
-    '................',
-  ]);
-
-  const HELGE_DUCK_MAP = [
-    '..................',
-    '.....kkkkkkkk.....',
-    '...kkkkkkkkkkkk...',
-    '..kkkkkkkkkkkkk...',
-    '..kksssssssssskk..',
-    '..kssseesseesssk..',
-    '..kssssssssssssk..',
-    '...ssssmmssssss...',
-    'uuuussssssssssuuuu',
-    'uuuuuuuuuuuuuuuuu.',
-    'uwuuuuuuuuuuuuwu..',
-    '.uuuuuuuuuuuuuuu..',
-    '..dddddddddddd....',
-    '..................',
-  ];
-
+  /* Lippo – golden retriever, sitting, facing right */
   const LIPPO_MAP = [
-    '.ee........ee.',
-    '.eee......eee.',
-    '.eebbbbbbbee..',
-    '.eebsssbbee...',
-    '..bbbssssbb...',
-    '..bbbbnbbbb...',
-    '..bbbttbbb....',
-    '...bbbbbb.....',
-    '...bb..bb.....',
-    '...bb..bb.....',
+    '........ffffff....',
+    '.......fFFffffff..',
+    '......dfFfffewfff.',
+    '......ddffffffffnn',
+    '......dddfffFFFt..',
+    '......dddffffftt..',
+    '.......ddfffff....',
+    'dd....fffFFfff....',
+    'fdd..ffffFFFff....',
+    '.fdfffffffFFff....',
+    '..ffffffffffff....',
+    '..fffffffffFff....',
+    '...ffff..ffFf.....',
+    '..FFFF...FFFF.....',
   ];
 
-  /* Palettes per character */
+  const OUTLINE = '#1b1626';
+
+  /* Palettes per character (+ signature board colours from the artwork) */
   const CHARACTERS = {
     wave: {
-      id: 'wave', name: 'Wave',
-      palette: { h: '#12203f', s: '#f8d9bd', e: '#141414', m: '#d96a8a', b: '#2d9dd6', f: '#5bb9eb', p: '#123c5e' },
-      desc: 'Blue-hoodie speedster',
+      id: 'wave', name: 'Wave', head: 12, upper: WAVE_UPPER,
+      palette: {
+        b: '#1d1d26', B: '#3a3a4a', h: '#eef0f5', H: '#c4c8d4', s: '#f6d2b6', S: '#e0a887',
+        g: '#15151c', l: '#cfe3f2', e: '#1f1a2b', m: '#b8405e', w: '#ffffff',
+        c: '#22222c', C: '#383846',
+        p: '#1f1f28', P: '#f2f2f2', q: '#15151c', k: '#e6d8b8', K: '#b7a27a',
+      },
+      board: { colors: ['#1f5fc0', '#4fd0ff', '#1f5fc0'], glow: '#5ad1ff' },
+      desc: 'Beanie & blue lightning board',
     },
     khaki: {
-      id: 'khaki', name: 'Khaki',
-      palette: { h: '#4e322e', s: '#e9b98d', e: '#141414', m: '#a05a3c', b: '#968f71', f: '#8f6c5e', p: '#5e5340' },
-      desc: 'Earth-tone cruiser',
+      id: 'khaki', name: 'Khaki', head: 12, upper: KHAKI_UPPER,
+      palette: {
+        h: '#6b3f24', H: '#9a6238', s: '#f4cfb2', S: '#dca283', d: '#4a2a18', e: '#2a1a14',
+        w: '#ffffff', r: '#f0a0a8', m: '#c44d62',
+        j: '#cfb68d', J: '#a58d66', t: '#1c1a22', n: '#f2c14e',
+        p: '#2a2530', P: '#3f3848', q: '#1a171f', k: '#5a3d2a', K: '#7d5a40',
+      },
+      board: { colors: ['#1e3a26', '#2f8f4a', '#1e3a26'], glow: '#4dff7c' },
+      desc: 'Khaki jacket & neon board',
     },
     sky: {
-      id: 'sky', name: 'Sky',
-      palette: { h: '#304b5f', s: '#f8dfc8', e: '#141414', m: '#c96a8a', b: '#a1e0f1', f: '#6fc8ec', p: '#2b3849' },
-      desc: 'Light-sky trickster',
+      id: 'sky', name: 'Sky', head: 12, upper: SKY_UPPER,
+      palette: {
+        h: '#eeb449', H: '#fbe08a', s: '#f8d5bc', S: '#e2a98b', g: '#7a4b32', w: '#ffffff',
+        e: '#1f1a2b', r: '#f29ab0', m: '#d4506e', c: '#f5f7fb', C: '#7b9cc9', b: '#3d4461',
+        y: '#e8743b', z: '#46a6d9',
+        p: '#86acd8', P: '#5f86b3', q: '#5f86b3', k: '#4f7fd1', K: '#ff79a8',
+      },
+      board: { colors: ['#c42a3e', '#ff6070', '#c42a3e'], glow: '#ff5a5a' },
+      desc: 'Backpack, glasses & red board',
     },
     helge: {
-      id: 'helge', name: 'Helge',
-      palette: { k: '#131313', s: '#f8d9bd', e: '#141414', m: '#d96a8a', u: '#7753c4', w: '#825bd9', d: '#312250' },
+      id: 'helge', name: 'Helge', head: 13, upper: HELGE_UPPER,
+      palette: {
+        h: '#2e2e34', H: '#4f4f5a', s: '#f8dcc4', S: '#e0b89a', n: '#f0a070',
+        g: '#e4e4ea', e: '#0e0e12', w: '#ffffff', m: '#9c3b4c',
+        t: '#fafafa', T: '#d6d6de',
+        p: '#5a3aa8', P: '#7753c4', q: '#3e2780', k: '#1d1d26', K: '#3a3a4a',
+      },
+      board: { colors: ['#5a36b8', '#b58cff', '#5a36b8'], glow: '#b07cff' },
       desc: 'The mascot himself',
     },
   };
 
-  /* Build a sprite canvas from a map + palette */
-  function buildSprite(map, palette) {
+  function poseMap(def, pose) {
+    if (pose === 'duck') {
+      // keep the head, squash the torso to arms + hem, crouch the legs
+      const u = def.upper;
+      return u.slice(0, def.head).concat([u[u.length - 3], u[u.length - 1]], LOWER.duck);
+    }
+    return def.upper.concat(LOWER[pose === 'jump' ? 'jump' : 'run']);
+  }
+
+  /* Build a sprite canvas from a map + palette, optionally with a 1px outline */
+  function buildSprite(map, palette, outline) {
     const w = map[0].length, h = map.length;
+    const pad = outline ? 1 : 0;
     const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
+    canvas.width = w + pad * 2; canvas.height = h + pad * 2;
     const ctx = canvas.getContext('2d');
+    const solid = (r, c) => r >= 0 && r < h && c >= 0 && c < w && !!palette[map[r][c]];
+    if (outline) {
+      ctx.fillStyle = outline;
+      for (let r = -1; r <= h; r++)
+        for (let c = -1; c <= w; c++)
+          if (!solid(r, c) && (solid(r - 1, c) || solid(r + 1, c) || solid(r, c - 1) || solid(r, c + 1)))
+            ctx.fillRect(c + pad, r + pad, 1, 1);
+    }
     for (let r = 0; r < h; r++) {
       for (let c = 0; c < w; c++) {
-        const ch = map[r][c];
-        if (ch === '.' || ch === ' ') continue;
-        const col = palette[ch];
+        const col = palette[map[r][c]];
         if (!col) continue;
         ctx.fillStyle = col;
-        ctx.fillRect(c, r, 1, 1);
+        ctx.fillRect(c + pad, r + pad, 1, 1);
       }
     }
     return canvas;
@@ -268,20 +340,16 @@ const Sprites = (() => {
     const key = `surfer:${charId}:${pose}`;
     if (cache.has(key)) return cache.get(key);
     const def = CHARACTERS[charId] || CHARACTERS.wave;
-    let map = SURFER_MAP, pal = Object.assign({}, def.palette);
-    if (charId === 'helge') {
-      map = pose === 'jump' ? HELGE_JUMP_MAP : pose === 'duck' ? HELGE_DUCK_MAP : HELGE_MAP;
-    } else {
-      map = pose === 'jump' ? SURFER_JUMP_MAP : pose === 'duck' ? SURFER_DUCK_MAP : SURFER_MAP;
-    }
-    const cnv = buildSprite(map, pal);
+    const cnv = buildSprite(poseMap(def, pose), def.palette, OUTLINE);
     cache.set(key, cnv);
     return cnv;
   }
 
   function lippoSprite() {
     if (cache.has('lippo')) return cache.get('lippo');
-    const cnv = buildSprite(LIPPO_MAP, { e: '#4e322e', b: '#b5825f', s: '#f2d3b3', n: '#3a241f', t: '#e96a7d' });
+    const cnv = buildSprite(LIPPO_MAP, {
+      f: '#e3a43c', F: '#f6c96e', d: '#b8741f', e: '#1f1a2b', w: '#ffffff', n: '#2a1e18', t: '#f07a8a',
+    }, OUTLINE);
     cache.set('lippo', cnv);
     return cnv;
   }
@@ -485,28 +553,45 @@ const Sprites = (() => {
   };
 
   /* Draw a surfboard directly (ellipse-ish pixel style), width in px */
-  function drawBoard(ctx, x, y, w, h, boardId, tilt) {
-    const def = BOARDS[boardId] || BOARDS.classic;
+  /* The classic board is replaced by the character's signature board
+   * (red / blue / green / purple glow, as in the team artwork). */
+  function drawBoard(ctx, x, y, w, h, boardId, tilt, charId) {
+    const sig = (!boardId || boardId === 'classic') && CHARACTERS[charId] && CHARACTERS[charId].board;
+    const def = sig || BOARDS[boardId] || BOARDS.classic;
     const segs = def.colors.length;
     ctx.save();
     ctx.translate(x, y);
     if (tilt) ctx.rotate(tilt);
     ctx.imageSmoothingEnabled = false;
     const hw = w / 2, hh = h / 2;
+    if (sig) {
+      // neon glow halo under the board
+      ctx.fillStyle = def.glow;
+      ctx.globalAlpha = 0.45 + 0.15 * Math.sin(Date.now() * 0.008);
+      ctx.beginPath(); ctx.ellipse(0, 0, hw + 6, hh + 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    // board outline, then colour segments clipped to the board shape
+    ctx.fillStyle = '#1b1626';
+    ctx.beginPath(); ctx.ellipse(0, 0, hw + 2, hh + 2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(0, 0, hw, hh, 0, 0, Math.PI * 2); ctx.clip();
     for (let i = 0; i < segs; i++) {
       ctx.fillStyle = def.colors[i % def.colors.length];
-      const x0 = -hw + (w / segs) * i;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, hw, hh, 0, 0, Math.PI * 2);
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(x0 - 0.5, -hh - 1, w / segs + 1, h + 2);
-      ctx.clip();
-      ctx.fill();
-      ctx.restore();
+      ctx.fillRect(-hw + (w / segs) * i - 0.5, -hh - 1, w / segs + 1, h + 2);
     }
+    ctx.restore();
     ctx.fillStyle = 'rgba(255,255,255,0.55)';
     ctx.fillRect(-hw * 0.5, -1, w * 0.5, 2);
+    if (sig) {
+      // lightning zig-zag decal
+      ctx.fillStyle = def.glow;
+      const u = Math.max(2, Math.round(h / 8));
+      ctx.fillRect(-3 * u, -2 * u, 3 * u, u);
+      ctx.fillRect(-u, -u, u, u);
+      ctx.fillRect(-u, 0, 3 * u, u);
+      ctx.fillRect(u, u, u, u);
+    }
     ctx.restore();
   }
 
@@ -543,7 +628,11 @@ const Sprites = (() => {
   function helgePortrait(scale) {
     const key = 'helgePortrait:' + scale;
     if (cache.has(key)) return cache.get(key);
-    const base = surferSprite('helge', 'run');
+    // head & shoulders only (like the portrait artwork), on a purple disc
+    const full = surferSprite('helge', 'run');
+    const base = document.createElement('canvas');
+    base.width = full.width; base.height = CHARACTERS.helge.head + 2; // outline row + turtleneck
+    base.getContext('2d').drawImage(full, 0, 0);
     const cnv = document.createElement('canvas');
     cnv.width = base.width * scale + 16;
     cnv.height = base.height * scale + 16;
