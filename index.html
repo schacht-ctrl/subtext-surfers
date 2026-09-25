@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subtext Surfers 🏄</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏄</text></svg>" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game-canvas" width="960" height="540"></canvas>
+
+    <!-- ============================== HUD ============================== -->
+    <div id="hud" style="display:none">
+      <div class="hud-top">
+        <div class="hud-box">
+          <span class="hud-label">SCORE</span>
+          <span id="hud-score">0</span>
+        </div>
+        <div class="hud-box"><span id="hud-speed">💨 0 u/s</span></div>
+        <div class="hud-box"><span id="hud-trick">✦ 0</span></div>
+        <div class="hud-box">
+          <span class="hud-label">LIVES</span>
+          <span id="hud-lives"></span>
+        </div>
+      </div>
+      <div class="hud-bottom">
+        <div class="caff-wrap">
+          <span id="caff-label">☕ caffeine</span>
+          <div id="caff-bar"><div id="caff-bar-fill"></div></div>
+        </div>
+        <div id="hud-word"></div>
+      </div>
+      <div id="flash"></div>
+      <div id="pause-overlay"><div class="pause-card"><h2>⏸ Paused</h2><p>Press <b>P</b> or <b>Esc</b> to keep surfing</p></div></div>
+    </div>
+
+    <!-- ============================ LOGIN ============================== -->
+    <div class="screen" id="screen-login">
+      <div class="panel login-panel">
+        <h1 class="rainbow-title">Subtext Surfers</h1>
+        <p class="subtitle">Catch good words. Dodge the bad ones. 🌊</p>
+        <div class="login-form">
+          <input id="login-name" type="text" placeholder="Your name" maxlength="24" autocomplete="off" />
+          <button id="login-submit" class="btn primary">Create login 🏄</button>
+          <button id="gh-login-btn" class="btn github" style="display:none">Sign in with GitHub 🐙</button>
+          <p class="hint">Your highscore, unlocks and login are kept on this device.<br/>With company GitHub sign-in your login gets verified ✔</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================ START ============================== -->
+    <div class="screen" id="screen-start">
+      <div class="panel start-panel">
+        <h1 class="rainbow-title small">Subtext Surfers</h1>
+        <h2 id="start-welcome">Aloha! 🤙</h2>
+
+        <div class="start-row">
+          <div class="start-col">
+            <h3>Surfer</h3>
+            <div id="player-list"></div>
+            <div id="start-name-row"></div>
+            <div class="stat-row"><span>🏅 Best score: <b id="start-highscore">0</b></span></div>
+            <div class="stat-row"><span>✦ Style points: <b id="start-trickpts">0</b></span></div>
+          </div>
+          <div class="start-col wide">
+            <h3>Pick your character</h3>
+            <div id="char-select"></div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button id="btn-play" class="btn primary big">▶ Play!</button>
+          <button id="btn-shop" class="btn">🛍 Unlocks</button>
+          <button id="btn-tutorial" class="btn">🎓 Tutorial</button>
+          <button id="btn-mute" class="btn">🔊</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================= SHOP ============================== -->
+    <div class="screen" id="screen-shop">
+      <div class="panel shop-panel">
+        <h2>🛍 Gimmicks &amp; Gadget-Shop</h2>
+        <p>Style points ✦: <b id="shop-balance">0</b></p>
+        <div id="shop-grid"></div>
+        <div class="btn-row"><button id="btn-shop-back" class="btn primary">← Back</button></div>
+      </div>
+    </div>
+
+    <!-- =========================== TUTORIAL ============================ -->
+    <div class="screen" id="screen-tutorial">
+      <div class="panel tutorial-panel">
+        <div class="tut-flex">
+          <canvas id="tut-helge"></canvas>
+          <div class="tut-right">
+            <div id="tut-text"></div>
+            <div class="tut-controls">
+              <span id="tut-count">1 / 8</span>
+              <button id="tut-next" class="btn primary">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================== GAME OVER =========================== -->
+    <div class="screen" id="screen-gameover">
+      <div class="panel gameover-panel">
+        <h1 class="rainbow-title small">Wipeout! 🌊</h1>
+        <div class="go-stats">
+          <div class="go-score-big"><span class="hud-label">SCORE</span><span id="go-score">0</span></div>
+          <div class="go-best"><span id="go-best-label"></span> <span id="go-best"></span></div>
+          <div id="go-trickpts"></div>
+        </div>
+        <h3>Leaderboard</h3>
+        <p id="go-position"></p>
+        <div id="go-leaderboard"></div>
+        <div class="btn-row">
+          <button id="btn-again" class="btn primary big">🔁 Surf again</button>
+          <button id="btn-to-start" class="btn">🏠 Start screen</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="boot-error" style="display:none"></div>
+  </div>
+
+  <script>
+    window.addEventListener('error', function (e) {
+      var el = document.getElementById('boot-error');
+      if (el) { el.style.display = 'block'; el.textContent = 'ERROR: ' + e.message + ' @ ' + e.filename + ':' + e.lineno; }
+    });
+  </script>
+  <script src="assets/js/sprites.js"></script>
+  <script src="assets/js/audio.js"></script>
+  <script src="assets/js/storage.js"></script>
+  <script src="assets/js/game.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
