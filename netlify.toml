@@ -1,24 +1,6 @@
+# Static site – no build step needed
 [build]
   publish = "."
-  command = ""
-
-[[redirects]]
-  from = "/api/auth-config"
-  to = "/.netlify/functions/auth-config"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/auth-login"
-  to = "/.netlify/functions/auth-login"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api/auth-callback"
-  to = "/.netlify/functions/auth-callback"
-  status = 200
-  force = true
 
 # Never cache the game itself; always fresh after a deploy
 [[headers]]

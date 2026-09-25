@@ -16,10 +16,13 @@ optional GitHub sign-in.
 - **Bad words** (dodge!): `LATENCY`, `BUG`, `HALLUCINATION`, `ERROR`
 - **Tricks**: press `Space` twice in a row with the right timing → bonus points
   and **style points ✦**
-- **Caffeine**: coffee ☕ and Mate 🧉 make you faster and speed up the music.
-  Overcharge the bar and your controls invert and vibrate — it decays over time.
-- **Lives**: you start with 10. Heal with vegan chocolate croissants 🥐 from
+- **Caffeine**: coffee ☕ and Mate 🧉 are rare treats — they make you faster
+  and speed up the music. Overcharge the bar and your controls invert and
+  vibrate — it decays over time.
+- **Lives**: you start with 5. Heal with vegan chocolate croissants 🥐 from
   the sipgate kitchen.
+- **Difficulty ramp**: the run starts with long, obstacle-free stretches
+  (perfect for tricks!) and slowly gets busier and faster over time.
 - **Unlocks** (bought with style points ✦): 2 extra surfboards, 3 funny hats,
   rainbow water, **Lippo** 🐶 the dog companion + his boards, sparkles and hats.
 - **Pause**: `P` or `Esc`
@@ -44,27 +47,21 @@ Audio starts with the first click (browser autoplay policy).
    Build command: *(empty)* · Publish directory: `.` (both preset in `netlify.toml`).
 3. Done. 🎉
 
-### Optional: GitHub sign-in (company GitHub verification)
+### Login
 
-The game works with a plain name login (stored locally in the browser).
-To link logins to the employees' GitHub accounts:
-
-1. Create an **OAuth App** in the company GitHub org
-   (Settings → Developer settings → OAuth Apps):
-   - **Authorization callback URL**: `https://YOUR-SITE.netlify.app/api/auth-callback`
-2. In Netlify → Site settings → Environment variables, set:
-   - `GITHUB_CLIENT_ID`
-   - `GITHUB_CLIENT_SECRET`
-3. Redeploy. The "Sign in with GitHub 🐙" button appears on the login screen
-   and marks player accounts as verified ✔.
+Logins are **name + password**: pick a name and a password once to create
+your surfer, and log in with them later to get your highscore, style points
+and unlocks back. The password is only a local gate for the browser profile
+(SHA-256-hashed in `localStorage`) — it never leaves the device. Switch
+players via "🔑 Switch player" on the start screen.
 
 ## 🔧 Tech notes
 
 - Pure HTML/JS/CSS + Canvas 2D, all pixel art generated in code (nyan-cat vibe)
 - `assets/audio/background.wav` — the team's 8-bit track, looped via Web Audio,
   playback rate tied to the caffeine level
-- Player data (logins, highscores, style points, unlocks) lives in `localStorage`
-- `netlify/functions/` — GitHub OAuth flow (config probe, login redirect, callback)
+- Player data (logins incl. SHA-256 password hashes, highscores, style
+  points, unlocks) lives in `localStorage`
 
 ## 📁 Structure
 
@@ -76,7 +73,6 @@ assets/js/audio.js        – music (caffeine tempo!) & pling sounds
 assets/js/storage.js      – players, highscores, unlocks, shop items
 assets/js/game.js         – engine: lanes, physics, collisions, rendering
 assets/js/main.js         – UI glue: login, start screen, shop, tutorial, HUD
-netlify/functions/*.js    – optional GitHub OAuth
 ```
 
 *Made with 🌈 by the Subtext Surfers.*

@@ -32,29 +32,65 @@ const Storage = (() => {
     return db[name.toLowerCase()] || null;
   }
 
-  function createPlayer(name, github) {
+  /* Password hashing: SHA-256 via Web Crypto (async), with a synchronous
+   * FNV-1a fallback for exotic environments. The hash is only a local gate
+   * for the browser profile – it never leaves the device. */
+  async function hashPassword(pw) {
+    const data = new TextEncoder().encode('subtext-surfers::' + pw);
+    if (window.crypto && crypto.subtle && crypto.subtle.digest) {
+      try {
+        const digest = await crypto.subtle.digest('SHA-256', data);
+        return 'sha256:' + Array.from(new Uint8Array(digest))
+          .map(b => b.toString(16).padStart(2, '0')).join('');
+      } catch (e) { /* fall through to FNV */ }
+    }
+    let h = 0x811c9dc5;
+    for (const b of data) { h ^= b; h = Math.imul(h, 0x01000193) >>> 0; }
+    return 'fnv:' + h.toString(16);
+  }
+
+  /* Creates a new player with a password hash. Returns null if the name
+   * is already taken. */
+  function createPlayer(name, passHash) {
     const id = name.trim().toLowerCase();
     if (!id) return null;
     const db = loadAll();
-    if (!db[id]) {
-      db[id] = {
-        name: name.trim(),
-        github: github || null,
-        highscore: 0,
-        trickPoints: 0,
-        runs: 0,
-        tutorialSeen: false,
-        character: 'wave',
-        loadout: { board: 'classic', hat: null, rainbowWater: false, lippo: false, lippoBoard: 'classic', lippoSparkles: false, lippoHat: null },
-        unlocked: [],
-        createdAt: Date.now(),
-      };
-      saveAll(db);
-    } else if (github && !db[id].github) {
-      db[id].github = github;
-      saveAll(db);
-    }
+    if (db[id]) return null;
+    db[id] = {
+      name: name.trim(),
+      passHash: passHash || null,
+      highscore: 0,
+      trickPoints: 0,
+      runs: 0,
+      tutorialSeen: false,
+      character: 'wave',
+      loadout: { board: 'classic', hat: null, rainbowWater: false, lippo: false, lippoBoard: 'classic', lippoSparkles: false, lippoHat: null },
+      unlocked: [],
+      createdAt: Date.now(),
+    };
+    saveAll(db);
     return db[id];
+  }
+
+  /* Verifies a login. Returns:
+   *   { ok: true,  player }              – password matches (or legacy
+   *                                         account claimed with this password)
+   *   { ok: false, reason: 'unknown' }   – no such player
+   *   { ok: false, reason: 'password' }  – wrong password
+   */
+  function verifyPlayer(name, passHash) {
+    const id = name.trim().toLowerCase();
+    const db = loadAll();
+    const p = db[id];
+    if (!p) return { ok: false, reason: 'unknown' };
+    if (!p.passHash) {
+      // legacy account without a password: claim it with this password
+      p.passHash = passHash;
+      saveAll(db);
+      return { ok: true, player: p };
+    }
+    if (p.passHash === passHash) return { ok: true, player: p };
+    return { ok: false, reason: 'password' };
   }
 
   function updatePlayer(name, patch) {
@@ -96,7 +132,8 @@ const Storage = (() => {
     return { position: idx >= 0 ? idx + 1 : null, total: players.length, players };
   }
 
-  return { listPlayers, getPlayer, createPlayer, updatePlayer, recordRun, unlock, getRanking };
+  return { listPlayers, getPlayer, createPlayer, verifyPlayer, hashPassword,
+           updatePlayer, recordRun, unlock, getRanking };
 })();
 
 /* ------------------------- unlockable items ------------------------- */

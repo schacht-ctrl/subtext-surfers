@@ -43,9 +43,12 @@
         <p class="subtitle">Catch good words. Dodge the bad ones. 🌊</p>
         <div class="login-form">
           <input id="login-name" type="text" placeholder="Your name" maxlength="24" autocomplete="off" />
-          <button id="login-submit" class="btn primary">Create login 🏄</button>
-          <button id="gh-login-btn" class="btn github" style="display:none">Sign in with GitHub 🐙</button>
-          <p class="hint">Your highscore, unlocks and login are kept on this device.<br/>With company GitHub sign-in your login gets verified ✔</p>
+          <input id="login-pass" type="password" placeholder="Your password" autocomplete="off" />
+          <div id="login-error" class="login-error"></div>
+          <button id="login-submit" class="btn primary">Log in / Create login 🏄</button>
+          <p class="hint">New name? A login is created with your password.<br/>
+          Returning? Log in with your name + password to get your stats back.<br/>
+          Highscores, unlocks and logins are kept on this device.</p>
         </div>
       </div>
     </div>
@@ -60,7 +63,6 @@
           <div class="start-col">
             <h3>Surfer</h3>
             <div id="player-list"></div>
-            <div id="start-name-row"></div>
             <div class="stat-row"><span>🏅 Best score: <b id="start-highscore">0</b></span></div>
             <div class="stat-row"><span>✦ Style points: <b id="start-trickpts">0</b></span></div>
           </div>
@@ -75,6 +77,7 @@
           <button id="btn-shop" class="btn">🛍 Unlocks</button>
           <button id="btn-tutorial" class="btn">🎓 Tutorial</button>
           <button id="btn-mute" class="btn">🔊</button>
+          <button id="btn-switch" class="btn">🔑 Switch player</button>
         </div>
       </div>
     </div>

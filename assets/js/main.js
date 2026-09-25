@@ -9,7 +9,7 @@ const MainUI = (() => {
   const $ = (id) => document.getElementById(id);
   let currentPlayer = null;
   let selectedCharacter = 'wave';
-  let authConfig = { enabled: false };
+  const SESSION_KEY = 'subtextSurfers.session';
 
   /* =============================== boot =============================== */
   function boot() {
@@ -22,31 +22,21 @@ const MainUI = (() => {
     wireTutorial();
     wireGameOver();
 
-    handleGithubRedirect();
-    checkAuthConfig(); // async, non-blocking
-
-    const players = Storage.listPlayers();
-    if (players.length === 0) showScreen('screen-login');
-    else { refreshStartScreen(); showScreen('screen-start'); }
-  }
-
-  function handleGithubRedirect() {
-    // GitHub OAuth result?
-    const params = new URLSearchParams(location.search);
-    const gh = params.get('github_login');
-    if (gh) {
-      sessionStorage.setItem('subtext.github', gh);
-      history.replaceState(null, '', location.pathname);
+    // auto-login the session player (same tab), otherwise ask for login
+    const sessionName = sessionStorage.getItem(SESSION_KEY);
+    const sessionPlayer = sessionName && Storage.getPlayer(sessionName);
+    if (sessionPlayer) {
+      currentPlayer = sessionPlayer;
+      selectedCharacter = sessionPlayer.character || 'wave';
+      refreshStartScreen();
+      showScreen('screen-start');
+    } else {
+      if (Storage.listPlayers().length > 0) {
+        // returning players log in with name + password to get their stats
+        $('login-name').placeholder = 'Your name (e.g. ' + Storage.listPlayers()[0].name + ')';
+      }
+      showScreen('screen-login');
     }
-  }
-
-  async function checkAuthConfig() {
-    try {
-      const res = await fetch('/api/auth-config');
-      if (res.ok) authConfig = await res.json();
-    } catch (e) { /* static dev: no function → name login only */ }
-    const ghBtn = $('gh-login-btn');
-    if (ghBtn) ghBtn.style.display = authConfig.enabled ? '' : 'none';
   }
 
   /* ============================== screens ============================= */
@@ -59,20 +49,53 @@ const MainUI = (() => {
 
   /* =============================== login ============================== */
   function wireLogin() {
-    $('login-submit').addEventListener('click', () => {
+    const doLogin = async () => {
       const name = $('login-name').value.trim();
+      const pw = $('login-pass').value;
+      const msg = $('login-error');
+      msg.textContent = '';
       if (!name) { shakeEl($('login-name')); return; }
-      const gh = sessionStorage.getItem('subtext.github');
-      currentPlayer = Storage.createPlayer(name, gh || null);
-      if (gh) sessionStorage.removeItem('subtext.github');
+      if (!pw) { shakeEl($('login-pass')); return; }
+
+      const hash = await Storage.hashPassword(pw);
+      const existing = Storage.getPlayer(name);
+      let player;
+      if (existing) {
+        const res = Storage.verifyPlayer(name, hash);
+        if (!res.ok) {
+          msg.textContent = res.reason === 'password'
+            ? 'Wrong password for this name. 🤔'
+            : 'Login failed.';
+          shakeEl($('login-pass'));
+          return;
+        }
+        player = res.player;
+      } else {
+        player = Storage.createPlayer(name, hash);
+      }
+
+      currentPlayer = player;
+      selectedCharacter = player.character || 'wave';
+      sessionStorage.setItem(SESSION_KEY, player.name);
+      $('login-pass').value = '';
       AudioSys.init().then(() => AudioSys.SFX.ui());
       refreshStartScreen();
       showScreen('screen-start');
-    });
-    $('login-name').addEventListener('keydown', e => { if (e.key === 'Enter') $('login-submit').click(); });
-    $('gh-login-btn').addEventListener('click', () => {
-      location.href = '/api/auth-login';
-    });
+    };
+    $('login-submit').addEventListener('click', doLogin);
+    $('login-name').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    $('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  }
+
+  /* open the login screen for a specific player (password required) */
+  function openLoginFor(name) {
+    sessionStorage.removeItem(SESSION_KEY);
+    $('login-error').textContent = '';
+    $('login-name').value = name || '';
+    $('login-pass').value = '';
+    showScreen('screen-login');
+    if (name) $('login-pass').focus();
+    else $('login-name').focus();
   }
 
   function shakeEl(el) {
@@ -82,42 +105,22 @@ const MainUI = (() => {
 
   /* ============================ start screen ========================== */
   function refreshStartScreen() {
-    if (!currentPlayer) {
-      const players = Storage.listPlayers();
-      currentPlayer = players[0] || null;
-    }
-    // player picker
+    if (!currentPlayer) return;
+    // player list: switching to another surfer requires their password
     const list = $('player-list');
     list.innerHTML = '';
     for (const p of Storage.listPlayers()) {
       const btn = document.createElement('button');
-      btn.className = 'player-chip' + (currentPlayer && p.name === currentPlayer.name ? ' active' : '') + (p.github ? ' verified' : '');
-      btn.innerHTML = `${escapeHtml(p.name)}${p.github ? ' <span class="gh-badge" title="verified via GitHub">✔</span>' : ''} <span class="chip-score">🏅 ${p.highscore}</span>`;
+      const isMe = p.name === currentPlayer.name;
+      btn.className = 'player-chip' + (isMe ? ' active' : '');
+      btn.innerHTML = `${escapeHtml(p.name)} <span class="chip-score">🏅 ${p.highscore}</span>`;
       btn.addEventListener('click', () => {
-        currentPlayer = p;
-        selectedCharacter = p.character || 'wave';
-        refreshStartScreen();
-        AudioSys.SFX.ui();
+        if (isMe) return;
+        openLoginFor(p.name);
       });
       list.appendChild(btn);
     }
-    // name entry for returning players
-    const nameRow = $('start-name-row');
-    nameRow.innerHTML = '';
-    const inp = document.createElement('input');
-    inp.id = 'start-name'; inp.placeholder = '…or enter your name'; inp.maxLength = 24;
-    const btn = document.createElement('button');
-    btn.id = 'start-name-btn'; btn.textContent = 'Login';
-    btn.addEventListener('click', () => {
-      const n = inp.value.trim();
-      if (!n) { shakeEl(inp); return; }
-      currentPlayer = Storage.createPlayer(n, sessionStorage.getItem('subtext.github') || null);
-      refreshStartScreen();
-    });
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') btn.click(); });
-    nameRow.appendChild(inp); nameRow.appendChild(btn);
 
-    if (!currentPlayer) return;
     $('start-highscore').textContent = currentPlayer.highscore;
     $('start-trickpts').textContent = currentPlayer.trickPoints;
     $('start-welcome').textContent = `Aloha, ${currentPlayer.name}! 🤙`;
@@ -170,6 +173,10 @@ const MainUI = (() => {
     $('btn-mute').addEventListener('click', () => {
       AudioSys.setMuted(!AudioSys.isMuted());
       $('btn-mute').textContent = AudioSys.isMuted() ? '🔇' : '🔊';
+    });
+    $('btn-switch').addEventListener('click', () => {
+      Game.stop();
+      openLoginFor(currentPlayer ? currentPlayer.name : '');
     });
   }
 
@@ -312,7 +319,7 @@ const MainUI = (() => {
     { img: 'helge', text: 'Dodge the red <b>bad words</b> — <b>LATENCY</b>, <b>BUG</b>, <b>HALLUCINATION</b> and <b>ERROR</b> are up to no good. Never let them hit you!' },
     { img: 'helge', text: 'Press <b>SPACE</b> — twice, with the right timing — for a <b>trick</b>! Tricks earn bonus points and <b>style points ✦</b> for the shop.' },
     { img: 'helge', text: 'Grab <b>coffee ☕</b> and <b>Mate 🧉</b> to surf faster — but beware! Overcharge your caffeine bar and your controls go… <i>wobbly</i>. The music speeds up too!' },
-    { img: 'helge', text: 'You start with <b>10 lives</b>. Collect <b>vegan chocolate croissants 🥐</b> from the sipgate kitchen to heal. Now let\'s surf! 🏄‍♀️' },
+    { img: 'helge', text: 'You start with <b>5 lives</b>. Collect <b>vegan chocolate croissants 🥐</b> from the sipgate kitchen to heal. Now let\'s surf! 🏄‍♀️' },
   ];
   let tutStep = 0;
 
@@ -374,7 +381,7 @@ const MainUI = (() => {
     rank.players.slice(0, 10).forEach((p, i) => {
       const row = document.createElement('div');
       row.className = 'lb-row' + (p.name === currentPlayer.name ? ' me' : '');
-      row.innerHTML = `<span class="lb-pos">${i + 1}.</span><span class="lb-name">${escapeHtml(p.name)}${p.github ? ' <span class="gh-badge" title="verified via GitHub">✔</span>' : ''}</span><span class="lb-score">${p.highscore}</span>`;
+      row.innerHTML = `<span class="lb-pos">${i + 1}.</span><span class="lb-name">${escapeHtml(p.name)}</span><span class="lb-score">${p.highscore}</span>`;
       table.appendChild(row);
     });
     showScreen('screen-gameover');
@@ -392,11 +399,11 @@ const MainUI = (() => {
       lastLives = d.lives;
       const el = $('hud-lives');
       el.innerHTML = '';
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < (d.maxLives || 5); i++) {
         const img = Sprites.heartSprite(i < d.lives).cloneNode();
         img.getContext('2d').drawImage(Sprites.heartSprite(i < d.lives), 0, 0);
         img.className = 'heart' + (i >= d.lives ? ' empty' : '');
-        if (d.lives <= 3) img.classList.add('blink');
+        if (d.lives <= 2) img.classList.add('blink');
         el.appendChild(img);
       }
     }

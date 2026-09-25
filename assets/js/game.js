@@ -14,9 +14,10 @@ const Game = (() => {
   const LANE_W = 252;              // lane x-offset at s = 1
   const Z_MAX = 60;                 // spawn distance
   const COLLIDE_Z = 1.15;          // collision window around z = 0
-  const MAX_LIVES = 10;
+  const MAX_LIVES = 5;
   const CAFF_MAX = 100;
   const OVERCHARGE = 85;           // above this: vibration + inverted controls
+  const RAMP_DIST = 2400;          // distance over which difficulty reaches max
   const GOOD_WORDS = ['SIPGATE', 'SONA', 'AGENT', 'VOICE'];
   const BAD_WORDS = ['LATENCY', 'BUG', 'HALLUCINATION', 'ERROR'];
   const LETTER_SCORE = 10, WORD_SCORE = 100, CROISSANT_SCORE = 25;
@@ -50,6 +51,9 @@ const Game = (() => {
   function scaleAt(z) { return 1 / (1 + z * 0.075); }
   function xAt(lane, s) { return W / 2 + lane * LANE_W * s; }
   function yAt(s) { return HORIZON_Y + (BASE_Y - HORIZON_Y) * s; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  /* difficulty 0 → 1 over the first RAMP_DIST units, then stays maxed */
+  function difficulty01() { return Math.max(0, Math.min(1, distance / RAMP_DIST)); }
 
   /* ------------------------------- init -------------------------------- */
   function init(canvasEl) {
@@ -182,27 +186,27 @@ const Game = (() => {
 
   /* ------------------------------ spawning ------------------------------ */
   function spawnRow() {
-    const roll = Math.random();
-    if (!activeWord && roll < 0.45) {
+    const d = difficulty01();
+    // good words keep appearing at a steady pace once a trail is finished
+    if (!activeWord && Math.random() < 0.45) {
       spawnLetterTrail();
-    } else if (roll < 0.8) {
-      spawnObstacles();
-    } else {
-      spawnObstacles(true);
-      spawnPickup();
+      return;
     }
+    // obstacles ramp up slowly; early runs get long plain stretches for tricks
+    if (Math.random() < lerp(0.35, 0.92, d)) spawnObstacles();
+    // otherwise: plain open water this row
   }
 
-  function spawnObstacles(withPickupLane) {
+  function spawnObstacles() {
+    const d = difficulty01();
     // choose 1–2 blocked lanes, keep at least one lane free of bad words
     const lanes = [-1, 0, 1].sort(() => Math.random() - 0.5);
-    const n = Math.random() < 0.35 ? 2 : 1;
-    const used = [];
+    const n = Math.random() < lerp(0.15, 0.45, d) ? 2 : 1;
     for (let i = 0; i < n; i++) {
       const lane = lanes[i];
       const kindRoll = Math.random();
       let type;
-      if (kindRoll < 0.4) type = 'badword';
+      if (kindRoll < lerp(0.25, 0.42, d)) type = 'badword';
       else if (kindRoll < 0.6) type = 'crate';
       else if (kindRoll < 0.8) type = 'bar';
       else type = 'sofa';
@@ -211,19 +215,12 @@ const Game = (() => {
         word: type === 'badword' ? BAD_WORDS[Math.floor(Math.random() * BAD_WORDS.length)] : null,
         hit: false,
       });
-      used.push(lane);
-      if (type === 'badword') {
-        // bad word fills the lane; occasionally a second bad word in another lane
-        if (Math.random() < 0.25 && i === 0) {
-          entities.push({ type: 'badword', lane: lanes[1], z: Z_MAX + 4, word: BAD_WORDS[Math.floor(Math.random() * BAD_WORDS.length)], hit: false });
-          used.push(lanes[1]);
-          break;
-        }
+      // a second bad word only appears later in the run — and never in all
+      // three lanes, so there is always a dodgeable way through
+      if (type === 'badword' && i === 0 && Math.random() < 0.2 * d) {
+        entities.push({ type: 'badword', lane: lanes[1], z: Z_MAX + 4, word: BAD_WORDS[Math.floor(Math.random() * BAD_WORDS.length)], hit: false });
+        break;
       }
-    }
-    if (withPickupLane) {
-      const free = [-1, 0, 1].filter(l => !used.includes(l));
-      if (free.length) spawnPickup(free[Math.floor(Math.random() * free.length)]);
     }
   }
 
@@ -243,8 +240,9 @@ const Game = (() => {
     lane = (lane !== undefined) ? lane : (Math.floor(Math.random() * 3) - 1);
     const roll = Math.random();
     let type;
-    if (roll < 0.4) type = 'coffee';
-    else if (roll < 0.75) type = 'mate';
+    // coffee & Mate are rarer now; croissants heal the 5 lives you have
+    if (roll < 0.3) type = 'coffee';
+    else if (roll < 0.55) type = 'mate';
     else type = 'croissant';
     entities.push({ type, lane, z: Z_MAX, collected: false });
   }
@@ -320,10 +318,16 @@ const Game = (() => {
       lippo.bob += dt;
     }
 
-    // spawning
+    // spawning – rows start far apart (long plain stretches for tricks)
+    // and tighten slowly as the run progresses, so dodging stays fair
     spawnAcc += speed * dt;
-    const gap = Math.max(5.2, 8.5 - distance * 0.001);
+    const gap = lerp(17, 6.5, difficulty01());
     if (spawnAcc > gap) { spawnAcc = 0; spawnRow(); }
+
+    // pickups run on their own, slower rhythm (coffee/Mate are a treat now)
+    pickupAcc += speed * dt;
+    const pickupGap = lerp(34, 17, difficulty01());
+    if (pickupAcc > pickupGap) { pickupAcc = 0; if (Math.random() < 0.8) spawnPickup(); }
 
     // entities
     for (const e of entities) e.z -= speed * dt;
@@ -665,7 +669,7 @@ const Game = (() => {
   /* --------------------------- HUD data out ---------------------------- */
   function hudData() {
     return {
-      score: Math.floor(score), lives, caffeine,
+      score: Math.floor(score), lives, maxLives: MAX_LIVES, caffeine,
       overcharged, speed: (baseSpeed() * (1 + caffeine / CAFF_MAX * 0.55)).toFixed(1),
       trickPts: trickRunPts, combo,
       word: activeWord ? activeWord.word : null,

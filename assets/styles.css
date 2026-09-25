@@ -135,9 +135,9 @@ html, body {
   border-color: var(--yellow);
 }
 .btn.big { font-size: 1.3rem; padding: 14px 30px; }
-.btn.github { background: linear-gradient(180deg, #333, #111); }
 .btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
 
+.login-error { color: #ff8fae; font-size: 0.8rem; min-height: 1.1rem; }
 .shake { animation: shake 0.4s; border-color: var(--pink) !important; }
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
@@ -169,19 +169,8 @@ html, body {
   font-size: 0.95rem;
 }
 .player-chip.active { border-color: var(--yellow); background: rgba(255, 210, 63, 0.15); }
-.player-chip.verified .gh-badge { color: var(--green); }
 .chip-score { color: var(--yellow); }
 
-#start-name-row { display: flex; gap: 8px; }
-#start-name-row input {
-  flex: 1;
-  font-family: inherit;
-  padding: 7px 10px;
-  border-radius: 8px;
-  border: 2px solid var(--blue);
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--dark);
-}
 .stat-row { margin-top: 10px; color: #cfc3ff; font-size: 0.9rem; }
 
 #char-select { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; }
@@ -260,7 +249,6 @@ html, body {
 .lb-pos { width: 2rem; color: var(--blue); }
 .lb-name { flex: 1; }
 .lb-score { color: var(--yellow); }
-.gh-badge { color: var(--green); font-size: 0.75rem; }
 
 /* -------------------------------- HUD ---------------------------------- */
 #hud {
